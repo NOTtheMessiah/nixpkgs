@@ -47,8 +47,8 @@ let
     else
       throw "unknown platform ${stdenv.hostPlatform.config}";
   boringSslSymbols = fetchurl {
-    url = "https://raw.githubusercontent.com/livekit/rust-sdks/refs/tags/webrtc-dac8015-6/webrtc-sys/libwebrtc/boringssl_prefix_symbols.txt";
-    hash = "sha256-dAweArv8zjsFPENEKi9mNBQkt4y+hh3rCqG6QZjRC20=";
+    url = "https://raw.githubusercontent.com/livekit/rust-sdks/refs/tags/webrtc-0001d84-2/webrtc-sys/libwebrtc/boringssl_prefix_symbols.txt";
+    hash = "sha256-740c1e02bbfcce3b053c43442a2f66341424b78cbe861deb0aa1ba4198d10b6d=";
   };
   gnSystemLibraries = import ./mkSystemLibraries.nix {
     inherit
@@ -69,7 +69,7 @@ let
 in
 stdenv.mkDerivation {
   pname = "livekit-libwebrtc";
-  version = "125-unstable-2025-07-25";
+  version = "137-unstable-2025-11-24";
 
   gclientDeps = gclient2nix.importGclientDeps ./sources.json;
   sourceRoot = "src";
@@ -77,19 +77,27 @@ stdenv.mkDerivation {
   patches = [
     # Adds missing dependencies to generated LICENSE
     (fetchpatch {
-      url = "https://raw.githubusercontent.com/livekit/rust-sdks/b41861c7b71762d5d85b3de07ae67ffcae7c3fa2/webrtc-sys/libwebrtc/patches/add_licenses.patch";
+      url = "https://raw.githubusercontent.com/livekit/rust-sdks/6689a3cb7746c1581359d908d353c4c1536ca7e1/webrtc-sys/libwebrtc/patches/add_licenses.patch";
       hash = "sha256-9A4KyRW1K3eoQxsTbPX0vOnj66TCs2Fxjpsu5wO8mGI=";
     })
     # Fixes the certificate chain, required for Let's Encrypt certs
     (fetchpatch {
-      url = "https://raw.githubusercontent.com/livekit/rust-sdks/b41861c7b71762d5d85b3de07ae67ffcae7c3fa2/webrtc-sys/libwebrtc/patches/ssl_verify_callback_with_native_handle.patch";
+      url = "https://raw.githubusercontent.com/livekit/rust-sdks/6689a3cb7746c1581359d908d353c4c1536ca7e1/webrtc-sys/libwebrtc/patches/ssl_verify_callback_with_native_handle.patch";
       hash = "sha256-/gneuCac4VGJCWCjJZlgLKFOTV+x7Lc5KVFnNIKenwM=";
     })
     # Adds dependencies and features required by livekit
     (fetchpatch {
-      url = "https://raw.githubusercontent.com/livekit/rust-sdks/b41861c7b71762d5d85b3de07ae67ffcae7c3fa2/webrtc-sys/libwebrtc/patches/add_deps.patch";
+      url = "https://raw.githubusercontent.com/livekit/rust-sdks/6689a3cb7746c1581359d908d353c4c1536ca7e1/webrtc-sys/libwebrtc/patches/add_deps.patch";
       hash = "sha256-EMNYcTcBYh51Tt96+HP43ND11qGKClfx3xIPQmIBSo0=";
     })
+    (fetchpatch {
+      url = "https://raw.githubusercontent.com/livekit/rust-sdks/6689a3cb7746c1581359d908d353c4c1536ca7e1/webrtc-sys/libwebrtc/patches/david_disable_gun_source_macro.patch";
+      hash = "sha256-EMNYcTcBYh51Tt96+HP43ND11qGKClfx3xIPQmIBSo0=";
+    })
+    # (fetchpatch {
+    #   url = "https://raw.githubusercontent.com/livekit/rust-sdks/6689a3cb7746c1581359d908d353c4c1536ca7e1/webrtc-sys/libwebrtc/patches/disable_sme_for_libyuv.patch";
+    #   hash = "sha256-EMNYcTcBYh51Tt96+HP43ND11qGKClfx3xIPQmIBSo0=";
+    # })
     # Fixes "error: no matching member function for call to 'emplace'"
     (fetchpatch {
       url = "https://raw.githubusercontent.com/zed-industries/livekit-rust-sdks/5f04705ac3f356350ae31534ffbc476abc9ea83d/webrtc-sys/libwebrtc/patches/abseil_use_optional.patch";
@@ -205,10 +213,10 @@ stdenv.mkDerivation {
   ]
   ++ (lib.optionals stdenv.hostPlatform.isLinux [
     "use_goma=false"
-    "rtc_use_pipewire=false"
+    "rtc_use_pipewire=true"
     "symbol_level=0"
     "enable_iterator_debugging=false"
-    "rtc_use_x11=false"
+    "rtc_use_x11=true"
     "use_sysroot=false"
     "is_clang=false"
   ])
@@ -251,7 +259,7 @@ stdenv.mkDerivation {
     mkdir -p $out/lib
     mkdir -p $dev/include
 
-    install -m0644 obj/webrtc.ninja args.gn LICENSE.md $dev
+    install -m0644 obj/webrtc.ninja obj/modules/desktop_capture/desktop_capture.ninja args.gn LICENSE.md $dev
 
     pushd ../..
     find . -name "*.h" -print | cpio -pd $dev/include
